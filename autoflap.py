@@ -35,6 +35,7 @@ import time
 
 # return {'valid': False} if not in plane
 
+
 def get_flaps():
     """return value of flaps.
     return None if not in plane or wt not running"""
