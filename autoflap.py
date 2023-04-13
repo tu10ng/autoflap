@@ -2,6 +2,24 @@ import re
 import requests
 import keyboard
 import time
+import os
+import csv
+
+# the value user wants. should be customizable outside of src.
+threshold = 15
+# the threshold can change +-1
+thres_range = 1
+thres_max = threshold + thres_range
+thres_min = threshold - thres_range
+
+config_file = "./.config.csv"
+config_file_mtime = 0
+
+
+def recalc_thres_range():
+    # its bit tedious to use class to just hold things we could type in two words
+    globals()['thres_max'] = threshold + thres_range
+    globals()['thres_min'] = threshold - thres_range
 
 # state的返回值如下
 # {"valid"                   : true,
@@ -51,6 +69,17 @@ def get_flaps():
     return flaps
 
 
+def update_config():
+    """ the update method we take means config file must have the same name
+    with global variables. """
+    with open(config_file) as f:
+        reader = csv.reader(f, delimiter=' ')
+        for k, v in reader:
+            globals()[k] = int(v)    # globals()['threshold']
+
+    recalc_thres_range()
+
+
 if __name__ == '__main__':
     session = requests.Session()
     # keyboard.wait("pause")
@@ -64,16 +93,27 @@ if __name__ == '__main__':
 
         flaps = get_flaps()
         while flaps == None:
+            print("还没上天")
             time.sleep(5)
             flaps = get_flaps()
-        
+
+        # ensure read config_file on startup
+        try:
+            if os.path.getmtime(config_file) > config_file_mtime:
+                update_config()
+        except Exception as e:
+            print("Error: no configuration file detected, default to 15.")
+                             
+        print("上天!: ", flaps)
         # with release in additional else, maybe we can avoid oscillation
-        if flaps >= 16:
+        if flaps >= thres_max:
             # press r
+            keyboard.release("f")            
             keyboard.press("r")
             continue
-        elif flaps <= 14:
+        elif flaps <= thres_min:
             # press f
+            keyboard.release("r")
             keyboard.press("f")
             continue
         else:

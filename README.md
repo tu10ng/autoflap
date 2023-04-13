@@ -16,20 +16,31 @@ run:
     pip install -r requirements.txt
     
 ### behaviour
-在终端中运行:
+#### 运行
+运行 .exe 文件, 或者在终端中运行:
 
     python ./autoflap.py
     
-默认运行后如果不是飞机, 或者战雷没运行, 就持续睡眠, 直到上飞机为止.
+如果不是飞机, 或者战雷没运行, 就持续睡眠, 直到上飞机为止.
 
 期间每五秒检测一次, 应该没有感觉.
 
-(bug): 目前不仅飞机战斗中, 在车库里看飞机时也会输出按键, 因此需要一个的暂停/继续键:
+目前因为无法自动检测前台程序, 运行后默认暂停状态.
 
-按下键盘上的 `Pause` 键会让程序暂时暂停, 再次按下 `Pause` 会让程序继续运行. 
+#### 暂停
+按下键盘上的 `Pause` 键会让程序暂停/继续
 
-完全终止程序, 请在运行上面命令的终端里按 `Ctrl-c`
+#### 修改配置
+如果需要改变 flaps 的值, 打开 .config.csv 修改. 
+
+程序在运行期间也会检测 config 文件的修改并重新读取.
+
+#### 退出
+- 直接关闭 .exe 运行后弹出的黑色终端, 
+- 在运行python的终端里, 按 `Ctrl-c`
+
+## known problems
 
 ## TODO
-- config file
 - web based configuration interface (like fish shell)
+- detect focus windows' name
