@@ -7,7 +7,9 @@ autoflap
 
 ## Usage
 ### requirements
-需要在 wt 里单独设置 f 和 r 键, 还要打开一个 powershell 或 cmd (以下称终端),
+需要在 wt 里单独设置 f 和 r 键
+
+还需要打开一个 powershell 或 cmd (以下称终端),
 
 run:
 
@@ -18,11 +20,13 @@ run:
 
     python ./autoflap.py
     
-默认运行后是停止状态, 按下键盘上的 `Pause` 键会让程序运行, 再次按下 `Pause` 会让程序再次停止.
+默认运行后如果不是飞机, 或者战雷没运行, 就持续睡眠, 直到上飞机为止.
+
+期间每五秒检测一次, 应该没有感觉.
+
+按下键盘上的 `Pause` 键会让程序暂时暂停, 再次按下 `Pause` 会让程序再次停止. 这个功能没什么用了, 不过没有删除, 避免脚本出错后难以退出的尴尬.
 
 完全终止程序, 请在运行上面命令的终端里按 `Ctrl-c`
 
 ## TODO
-- detect wt(aecs) and auto enable/disable
-- detect whether in plane or not
-
+无
