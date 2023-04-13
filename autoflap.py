@@ -82,8 +82,8 @@ def update_config():
 
 if __name__ == '__main__':
     session = requests.Session()
-    # keyboard.wait("pause")
-    # time.sleep(0.2)
+    keyboard.wait("pause")
+    time.sleep(0.2)
     while True:
         time.sleep(0.1)
         if keyboard.is_pressed("pause"):
