@@ -1,6 +1,7 @@
 autoflap
 ==
 根据8111端口的 flaps 的值不断按下 `f` 和 `r` (放下或收起襟翼) 将襟翼值控制在一个值
+
 目前只支持 Windows
 
 欢迎 issues 和 pull requests
