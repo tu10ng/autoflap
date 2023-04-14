@@ -4,6 +4,7 @@ import keyboard
 import time
 import os
 import csv
+import ctypes
 
 # the value user wants. should be customizable outside of src.
 threshold = 15
@@ -61,10 +62,10 @@ def get_flaps():
         state = session.get('http://127.0.0.1:8111/state').json()
     except Exception as e:
         return None
-    
+
     if state['valid'] == False:
         return None
-    
+
     flaps = state['flaps, %']
     return flaps
 
@@ -79,44 +80,82 @@ def update_config():
 
     recalc_thres_range()
 
+    
+# ret value:    
+# 'st.py - st - Visual Studio Code'
+# 'War Thunder - Test Flight'
+# 'War Thunder'
+def getWindow():
+    hwnd = ctypes.windll.user32.GetForegroundWindow()
+    length = ctypes.windll.user32.GetWindowTextLengthW(hwnd)
+    buff = ctypes.create_unicode_buffer(length + 1)
+    ctypes.windll.user32.GetWindowTextW(hwnd, buff, length + 1)
+    # buff.value is the title of the window, hwnd is the window handle
+    return buff.value   
+
+
+def in_wt():
+    """
+    "War Thunder" means in garage, which we will skip
+    "War Thunder - Test Flight" in test flight, which we want
+    
+    ground battle would not fall into this function(will sleep in outter function)
+    
+    TODO: other circumstances aren't yet tested
+    """
+    front_window = getWindow()
+    # print(front_window)
+    if re.search("War Thunder - ", front_window):
+        # print("in battle")
+        return True
+    else:
+        # print("not in battle")
+        return False
+    
+    
+def control_flaps(flaps):
+    # the additional else is to avoid oscillation
+    if flaps >= thres_max:      # press r
+        # must release f/r, the release in else sometime is missed
+        keyboard.release("f")
+        # cant use `press_and_release' due to unkown error
+        keyboard.press("r")
+    elif flaps <= thres_min:    # press f
+        keyboard.release("r")
+        keyboard.press("f")
+    else:
+        keyboard.release("r")
+        keyboard.release("f")
+        
 
 if __name__ == '__main__':
     session = requests.Session()
-    keyboard.wait("pause")
-    time.sleep(0.2)
     while True:
         time.sleep(0.1)
+        
+        # `Pause' to sleep the program 
         if keyboard.is_pressed("pause"):
-            time.sleep(0.2)
+            print("sleeping")
+            time.sleep(0.5)
             keyboard.wait("pause")
-            time.sleep(0.2)
-
-        flaps = get_flaps()
-        while flaps == None:
-            print("还没上天")
-            time.sleep(5)
-            flaps = get_flaps()
-
+            time.sleep(0.3)     # if too small, will trigger pause in next loop
+            
         # ensure read config_file on startup
         try:
             if os.path.getmtime(config_file) > config_file_mtime:
                 update_config()
         except Exception as e:
             print("Error: no configuration file detected, default to 15.")
-                             
+
+        # if not in plane, we will loop in here
+        flaps = get_flaps()
+        while flaps == None:
+            print("还没上天")
+            time.sleep(5)
+            flaps = get_flaps()
+
         print("上天!: ", flaps)
-        # with release in additional else, maybe we can avoid oscillation
-        if flaps >= thres_max:
-            # press r
-            keyboard.release("f")            
-            keyboard.press("r")
-            continue
-        elif flaps <= thres_min:
-            # press f
-            keyboard.release("r")
-            keyboard.press("f")
-            continue
-        else:
-            keyboard.release("r")
-            keyboard.release("f")
-            continue
+        
+        # if in plane, dont press keys when focus windows isnt wt
+        if in_wt():
+            control_flaps(flaps)
