@@ -32,6 +32,11 @@ autoflap
 
 程序在运行期间也会检测 config 文件的修改并重新读取.
 
+各选项说明:
+- threshold: 稳定值
+- time_interval: 每次循环的间隔时间
+- thres_range_sup/inf: 检测区间为 [ threshold - thres_range_inf, threshold + thres_range_sup ]
+
 #### 退出
 - 直接关闭 .exe 运行后弹出的黑色终端, 
 - 在运行python的终端里, 按 `Ctrl-c`
@@ -54,3 +59,6 @@ run:
 
 ## TODO
 - make 'print messages' more readable, like "in flight * 3"
+- add cat to print messages
+- 把襟翼值显示在屏幕上
+- 测试 thres_range 和 time_interval 不同值的体验

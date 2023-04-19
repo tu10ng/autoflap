@@ -9,9 +9,12 @@ import ctypes
 # the value user wants. should be customizable outside of src.
 threshold = 15
 # the threshold can change +-1
-thres_range = 1
-thres_max = threshold + thres_range
-thres_min = threshold - thres_range
+thres_range_sup = 1
+thres_range_inf = 1
+thres_max = threshold + thres_range_sup
+thres_min = threshold - thres_range_inf
+
+time_interval = 0.1
 
 config_file = "./.config.csv"
 config_file_mtime = 0
@@ -19,8 +22,9 @@ config_file_mtime = 0
 
 def recalc_thres_range():
     # its bit tedious to use class to just hold things we could type in two words
-    globals()['thres_max'] = threshold + thres_range
-    globals()['thres_min'] = threshold - thres_range
+    globals()["thres_max"] = threshold + thres_range_sup
+    globals()["thres_min"] = threshold - thres_range_inf
+
 
 # state的返回值如下
 # {"valid"                   : true,
@@ -59,29 +63,29 @@ def get_flaps():
     """return value of flaps.
     return None if not in plane or wt not running"""
     try:
-        state = session.get('http://127.0.0.1:8111/state').json()
+        state = session.get("http://127.0.0.1:8111/state").json()
     except Exception as e:
         return None
 
-    if state['valid'] == False:
+    if state["valid"] == False:
         return None
 
-    flaps = state['flaps, %']
+    flaps = state["flaps, %"]
     return flaps
 
 
 def update_config():
-    """ the update method we take means config file must have the same name
-    with global variables. """
+    """the update method we take means config file must have the same name
+    with global variables."""
     with open(config_file) as f:
-        reader = csv.reader(f, delimiter=' ')
+        reader = csv.reader(f, delimiter=" ")
         for k, v in reader:
-            globals()[k] = int(v)    # globals()['threshold']
+            globals()[k] = float(v)  # globals()['threshold']
 
     recalc_thres_range()
 
-    
-# ret value:    
+
+# ret value:
 # 'st.py - st - Visual Studio Code'
 # 'War Thunder - Test Flight'
 # 'War Thunder'
@@ -91,16 +95,16 @@ def getWindow():
     buff = ctypes.create_unicode_buffer(length + 1)
     ctypes.windll.user32.GetWindowTextW(hwnd, buff, length + 1)
     # buff.value is the title of the window, hwnd is the window handle
-    return buff.value   
+    return buff.value
 
 
 def in_wt():
     """
     "War Thunder" means in garage, which we will skip
     "War Thunder - Test Flight" in test flight, which we want
-    
+
     ground battle would not fall into this function(will sleep in outter function)
-    
+
     TODO: other circumstances aren't yet tested
     """
     front_window = getWindow()
@@ -111,35 +115,35 @@ def in_wt():
     else:
         # print("not in battle")
         return False
-    
-    
+
+
 def control_flaps(flaps):
     # the additional else is to avoid oscillation
-    if flaps >= thres_max:      # press r
+    if flaps >= thres_max:  # press r
         # must release f/r, the release in else sometime is missed
         keyboard.release("f")
         # cant use `press_and_release' due to unkown error
         keyboard.press("r")
-    elif flaps <= thres_min:    # press f
+    elif flaps <= thres_min:  # press f
         keyboard.release("r")
         keyboard.press("f")
     else:
         keyboard.release("r")
         keyboard.release("f")
-        
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     session = requests.Session()
     while True:
-        time.sleep(0.1)
-        
-        # `Pause' to sleep the program 
+        time.sleep(time_interval)
+
+        # `Pause' to sleep the program
         if keyboard.is_pressed("pause"):
             print("sleeping")
             time.sleep(0.5)
             keyboard.wait("pause")
-            time.sleep(0.3)     # if too small, will trigger pause in next loop
-            
+            time.sleep(0.3)  # if too small, will trigger pause in next loop
+
         # ensure read config_file on startup
         try:
             if os.path.getmtime(config_file) > config_file_mtime:
@@ -155,7 +159,7 @@ if __name__ == '__main__':
             flaps = get_flaps()
 
         print("上天!: ", flaps)
-        
+
         # if in plane, dont press keys when focus windows isnt wt
         if in_wt():
             control_flaps(flaps)

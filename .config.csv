@@ -1,1 +1,4 @@
 threshold 20
+time_interval 0.05
+thres_range_sup 0
+thres_range_inf 1
