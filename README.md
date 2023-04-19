@@ -59,6 +59,5 @@ run:
 
 ## TODO
 - make 'print messages' more readable, like "in flight * 3"
-- add cat to print messages
 - 把襟翼值显示在屏幕上
 - 测试 thres_range 和 time_interval 不同值的体验
