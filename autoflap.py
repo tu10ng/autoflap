@@ -117,24 +117,46 @@ def in_wt():
         return False
 
 
+class Press(object):
+    """
+    we must `press', and wait for a `time_interval', then `release',
+    to make wt recognize our key input.
+    and we cant use `press_and_release'
+    """
+
+    def __init__(self, key):
+        self.key = key
+
+    def __enter__(self):
+        keyboard.press(self.key)
+
+    def __exit__(self, *args):
+        time.sleep(time_interval / 2)
+        self.release_fr()
+        time.sleep(time_interval / 2)
+
+    def release_fr(self):
+        keyboard.release("f")
+        keyboard.release("r")
+
+
 def control_flaps(flaps):
-    # the additional else is to avoid oscillation
-    if flaps >= thres_max:  # press r
-        # must release f/r, the release in else sometime is missed
-        keyboard.release("f")
-        # cant use `press_and_release' due to unkown error
-        keyboard.press("r")
-    elif flaps <= thres_min:  # press f
-        keyboard.release("r")
-        keyboard.press("f")
-    else:
-        keyboard.release("r")
-        keyboard.release("f")
+    if flaps >= thres_max:
+        with Press("r"):
+            pass
+    elif flaps <= thres_min:
+        with Press("f"):
+            pass
+
+
+def wait_release(key):
+    while keyboard.is_pressed(key):
+        pass
 
 
 if __name__ == "__main__":
     print(
-        """
+        r"""
  
            |\___/|
            )     (             .              '
@@ -155,14 +177,15 @@ if __name__ == "__main__":
     )
     session = requests.Session()
     while True:
-        time.sleep(time_interval)
-
         # `Pause' to sleep the program
         if keyboard.is_pressed("pause"):
-            print("sleeping")
-            time.sleep(0.5)
+            with Press("r"):  # release flap immediately before release `pause'
+                wait_release("pause")
+                print("sleeping")
+
             keyboard.wait("pause")
-            time.sleep(0.3)  # if too small, will trigger pause in next loop
+            wait_release("pause")
+            print("awake")
 
         # ensure read config_file on startup
         try:

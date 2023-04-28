@@ -8,7 +8,7 @@ autoflap
 
 ## Usage
 ### requirements
-需要在 wt 里单独设置 `f` 和 `r` 键
+需要在 wt 里单独设置 `f` 和 `r` 键, 分别对应 开启襟翼 和 关襟翼
 
 ### 运行
 运行 release 里的 .exe 文件
@@ -27,19 +27,22 @@ autoflap
 #### 暂停
 按下键盘上的 `Pause` 键会让程序暂停/继续
 
-#### 修改配置
+- 如果在运行状态, 按下 `Pause` 后, 会先收起襟翼, 然后暂停(不等待松开)
+- 如果在睡眠状态, 在 `Pause` 按下并且松开后, 才会继续(和上面的行为不同)
+
+#### 退出
+- 直接关闭 .exe 运行后弹出的黑色终端, 
+- 在运行python的终端里, 按 `Ctrl-c`
+
+### 修改配置
 如果需要改变 flaps 的值, 打开 .config.csv 修改. 
 
-程序在运行期间也会检测 config 文件的修改并重新读取.
+程序在运行期间会检测 config 文件是否修改并重新读取.
 
 各选项说明:
 - threshold: 稳定值
 - time_interval: 每次循环的间隔时间
 - thres_range_sup/inf: 检测区间为 [ threshold - thres_range_inf, threshold + thres_range_sup ]
-
-#### 退出
-- 直接关闭 .exe 运行后弹出的黑色终端, 
-- 在运行python的终端里, 按 `Ctrl-c`
 
 ## build/test
 ### dependencies
@@ -55,9 +58,10 @@ run:
     python ./autoflap.py
 
 ## known problems
-- if press f/r for a long time, the `control_flaps` function stop to correct send f/r. repress f/r to let flaps fall back to threshold cant solve this problem
 
 ## TODO
 - make 'print messages' more readable, like "in flight * 3"
-- 把襟翼值显示在屏幕上
-- 测试 thres_range 和 time_interval 不同值的体验
+- 把要处于的稳定襟翼值显示在屏幕上
+- 测试 thres_range 和 time_interval 不同值对不同襟翼开关速度飞机的影响
+- 语音提示开启与否
+- 为不同机型提供预设值
