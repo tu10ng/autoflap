@@ -180,8 +180,14 @@ if __name__ == "__main__":
         # `Pause' to sleep the program
         if keyboard.is_pressed("pause"):
             with Press("r"):  # release flap immediately before release `pause'
-                wait_release("pause")
-                print("sleeping")
+                pass
+            with Press("r"):
+                pass
+            with Press("r"):
+                pass
+                
+            wait_release("pause")
+            print("sleeping")
 
             keyboard.wait("pause")
             wait_release("pause")
