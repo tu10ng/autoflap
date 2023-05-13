@@ -117,36 +117,19 @@ def in_wt():
         return False
 
 
-class Press(object):
-    """
-    we must `press', and wait for a `time_interval', then `release',
-    to make wt recognize our key input.
-    and we cant use `press_and_release'
-    """
-
-    def __init__(self, key):
-        self.key = key
-
-    def __enter__(self):
-        keyboard.press(self.key)
-
-    def __exit__(self, *args):
-        time.sleep(time_interval / 2)
-        self.release_fr()
-        time.sleep(time_interval / 2)
-
-    def release_fr(self):
-        keyboard.release("f")
-        keyboard.release("r")
+def press_key(key: str):
+    keyboard.press(key)
+    time.sleep(time_interval / 2)
+    keyboard.release("f")
+    keyboard.release("r")
+    time.sleep(time_interval / 2)
 
 
 def control_flaps(flaps):
     if flaps >= thres_max:
-        with Press("r"):
-            pass
+        press_key("r")
     elif flaps <= thres_min:
-        with Press("f"):
-            pass
+        press_key("f")
 
 
 def wait_release(key):
@@ -154,7 +137,7 @@ def wait_release(key):
         pass
 
 
-if __name__ == "__main__":
+def print_cat():
     print(
         r"""
  
@@ -175,39 +158,44 @@ if __name__ == "__main__":
 
 """
     )
+
+
+if __name__ == "__main__":
+    print_cat()
+    awake_time = 0
     session = requests.Session()
+
     while True:
         # `Pause' to sleep the program
         if keyboard.is_pressed("pause"):
-            with Press("r"):  # release flap immediately before release `pause'
-                pass
-            with Press("r"):
-                pass
-            with Press("r"):
-                pass
-                
+            # reset flap
+            press_key("r")
+            press_key("r")
+            press_key("r")
+
             wait_release("pause")
-            print("sleeping")
+            print("\nsleeping")
 
             keyboard.wait("pause")
             wait_release("pause")
-            print("awake")
+            awake_time += 1
+            print("awake * ", awake_time)
 
         # ensure read config_file on startup
         try:
             if os.path.getmtime(config_file) > config_file_mtime:
                 update_config()
         except Exception as e:
-            print("Error: no configuration file detected, default to 15.")
+            print("\rError: no configuration file detected, default to 15.")
 
         # if not in plane, we will loop in here
         flaps = get_flaps()
         while flaps == None:
-            print("还没上天")
+            print("\r还没上天", end="")
             time.sleep(5)
             flaps = get_flaps()
 
-        print("上天!: ", flaps)
+        print("\r上天!: ", flaps, end="")
 
         # if in plane, dont press keys when focus windows isnt wt
         if in_wt():

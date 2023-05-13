@@ -59,9 +59,10 @@ run:
     python ./autoflap.py
 
 ## known problems
+- python module `curses` dont behave well on Windows.
+- python module `ahk` block thread.
 
 ## TODO
-- make 'print messages' more readable, like "in flight * 3"
 - 把要处于的稳定襟翼值显示在屏幕上
 - 测试 thres_range 和 time_interval 不同值对不同襟翼开关速度飞机的影响
 - 语音提示开启与否
