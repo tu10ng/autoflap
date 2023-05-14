@@ -33,17 +33,15 @@ autoflap
 
 #### 退出
 - 直接关闭 .exe 运行后弹出的黑色终端, 
-- 在运行python的终端里, 按 `Ctrl-c`
 
 ### 修改配置
-如果需要改变 flaps 的值, 打开 .config.csv 修改. 
+如果需要改变 flaps 的值, 打开 config.json 修改. 
 
 程序在运行期间会检测 config 文件是否修改并重新读取.
 
 各选项说明:
-- threshold: 稳定值
-- time_interval: 每次循环的间隔时间
-- thres_range_sup/inf: 检测区间为 [ threshold - thres_range_inf, threshold + thres_range_sup ]
+- target_value: 飞机襟翼会保持在 `target_value` 的百分比下张开
+- time_interval: 每次循环的间隔时间 (不建议调, 调小了没什么效果, 调大了可能导致代码运行有bug, 因为程序多线程的通信我没有细调, 太大了, 导致接收并控制襟翼的线程接收的没有获取数据的线程发送的多, 会一直收不到最新的数据.)
 
 ## build/test
 ### dependencies
@@ -58,12 +56,14 @@ run:
 
     python ./autoflap.py
 
+### 退出
+在运行python的终端里, 按 `Ctrl-c`
+
 ## known problems
 - python module `curses` dont behave well on Windows.
 - python module `ahk` block thread.
 
 ## TODO
 - 把要处于的稳定襟翼值显示在屏幕上
-- 测试 thres_range 和 time_interval 不同值对不同襟翼开关速度飞机的影响
 - 语音提示开启与否
 - 为不同机型提供预设值

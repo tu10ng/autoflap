@@ -1,30 +1,13 @@
+import json
 import re
 import requests
 import keyboard
 import time
 import os
-import csv
 import ctypes
-
-# the value user wants. should be customizable outside of src.
-threshold = 15
-# the threshold can change +-1
-thres_range_sup = 1
-thres_range_inf = 1
-thres_max = threshold + thres_range_sup
-thres_min = threshold - thres_range_inf
-
-time_interval = 0.1
-
-config_file = "./.config.csv"
-config_file_mtime = 0
-
-
-def recalc_thres_range():
-    # its bit tedious to use class to just hold things we could type in two words
-    globals()["thres_max"] = threshold + thres_range_sup
-    globals()["thres_min"] = threshold - thres_range_inf
-
+import multiprocessing as mp
+import queue
+from dataclasses import dataclass
 
 # state的返回值如下
 # {"valid"                   : true,
@@ -59,30 +42,114 @@ def recalc_thres_range():
 # return {'valid': False} if not in plane
 
 
-def get_flaps():
-    """return value of flaps.
-    return None if not in plane or wt not running"""
-    try:
-        state = session.get("http://127.0.0.1:8111/state").json()
-    except Exception as e:
+def send_flaps(mkq: mp.Queue, awoke):
+    session = requests.Session()
+
+    def read_8111():
+        """
+        return value of flaps.
+        return None if not in plane or wt not running
+        """
+        try:
+            state = session.get("http://127.0.0.1:8111/state").json()
+        except Exception as e:
+            print(e)
+            return None
+
+        if state["valid"] == False:
+            return None
+
+        return state["flaps, %"]
+
+    while True:
+        awoke.wait()
+        # if not in plane, we will loop in here
+        # time sleep here must not be too small, or mkq will not be empty
+        time.sleep(0.002)
+        flaps = read_8111()
+        if flaps == None:
+            print("还没上天")
+            time.sleep(5)
+        else:
+            # print("send ", flaps)
+            mkq.put(("flaps", flaps))
+
+
+def control_flaps(mkq: mp.Queue, awoke):
+    """
+    mkq is a message queue
+    """
+    flaps: int = 0
+    target_value: int = 15
+    time_interval: float = 0.001
+
+    while True:
+        awoke.wait()
+        if time_interval > 0:
+            time.sleep(time_interval)
+
+        try:
+            # only update data when new data arrives
+            # get two times to (try to) make mkq empty
+            for _ in range(2):
+                if msg := mkq.get_nowait():
+                    if msg[0] == "flaps":
+                        flaps = msg[1]
+                    elif msg[0] == "config":
+                        data = msg[1]
+                        target_value = data["target_value"]
+                        time_interval = data["time_interval"]
+        except queue.Empty:
+            pass
+
+        # print(mkq.empty())
+        # no flash on Windows
+        print(f"\033[5;33m上天!: {flaps}   \033[0m", end="\r")
+
+        if in_wt():
+            if flaps >= target_value:
+                press_key("r")
+            else:
+                press_key("f")
+
+
+@dataclass
+class Config:
+    path: str = "./config.json"
+    mtime: float = 0.0
+
+
+def send_config(mkq: mp.Queue, awoke):
+    def make_msg(config: Config):
+        """
+        return None if config file isnt modified.
+        else returns a tuple like ('config', JSON_DATA), example:
+        ('config', {'target_value': 15, 'time_interval': 0.01})
+
+        """
+        # TODO global value
+        try:
+            if os.path.getmtime(config.path) > config.mtime:
+                config.mtime = os.path.getmtime(config.path)
+                with open(config.path) as f:
+                    data = json.load(f)
+                    print(f"\033[0;32mnew configuration: {data}\033[0m")
+                    return ("config", data)
+        except Exception as e:
+            # TODO: 15 isn't global
+            print(f"\033[0;31mError: loading configuration file: {e}.\033[0m")
+
         return None
 
-    if state["valid"] == False:
-        return None
+    # send_config
+    config = Config()
+    while True:
+        awoke.wait()
 
-    flaps = state["flaps, %"]
-    return flaps
-
-
-def update_config():
-    """the update method we take means config file must have the same name
-    with global variables."""
-    with open(config_file) as f:
-        reader = csv.reader(f, delimiter=" ")
-        for k, v in reader:
-            globals()[k] = float(v)  # globals()['threshold']
-
-    recalc_thres_range()
+        time.sleep(1)
+        msg = make_msg(config)
+        if msg != None:
+            mkq.put(msg)
 
 
 # ret value:
@@ -108,28 +175,19 @@ def in_wt():
     TODO: other circumstances aren't yet tested
     """
     front_window = getWindow()
-    # print(front_window)
-    if re.search("War Thunder - ", front_window):
-        # print("in battle")
-        return True
-    else:
-        # print("not in battle")
-        return False
+    return True if re.search("War Thunder - ", front_window) else False
 
 
 def press_key(key: str):
+    """
+    important: have a delay of 0.?s.
+    """
+    interval = 0.0001
     keyboard.press(key)
-    time.sleep(time_interval / 2)
+    time.sleep(interval / 2)
     keyboard.release("f")
     keyboard.release("r")
-    time.sleep(time_interval / 2)
-
-
-def control_flaps(flaps):
-    if flaps >= thres_max:
-        press_key("r")
-    elif flaps <= thres_min:
-        press_key("f")
+    time.sleep(interval / 2)
 
 
 def wait_release(key):
@@ -161,42 +219,35 @@ def print_cat():
 
 
 if __name__ == "__main__":
+    mp.set_start_method("spawn")  # default on windows, but not linux
+    os.system("")  # for ascii control sequence
+    mkq = mp.Queue()
+    awoke = mp.Event()  # if set->run; clear->sleep
+    awoke.set()
+
     print_cat()
-    awake_time = 0
-    session = requests.Session()
+    p0 = mp.Process(target=send_flaps, args=(mkq, awoke))
+    p1 = mp.Process(target=control_flaps, args=(mkq, awoke))
+    p2 = mp.Process(target=send_config, args=(mkq, awoke))
+    p0.start()
+    p1.start()
+    p2.start()
 
     while True:
         # `Pause' to sleep the program
-        if keyboard.is_pressed("pause"):
-            # reset flap
-            press_key("r")
-            press_key("r")
-            press_key("r")
+        keyboard.wait("pause")
+        wait_release("pause")
+        awoke.clear()
 
-            wait_release("pause")
-            print("\nsleeping")
-
-            keyboard.wait("pause")
-            wait_release("pause")
-            awake_time += 1
-            print("awake * ", awake_time)
-
-        # ensure read config_file on startup
-        try:
-            if os.path.getmtime(config_file) > config_file_mtime:
-                update_config()
-        except Exception as e:
-            print("\rError: no configuration file detected, default to 15.")
-
-        # if not in plane, we will loop in here
-        flaps = get_flaps()
-        while flaps == None:
-            print("\r还没上天", end="")
-            time.sleep(5)
-            flaps = get_flaps()
-
-        print("\r上天!: ", flaps, end="")
-
-        # if in plane, dont press keys when focus windows isnt wt
+        # reset flap
         if in_wt():
-            control_flaps(flaps)
+            press_key("r")
+            press_key("r")
+            press_key("r")
+
+        print("sleeping")
+
+        keyboard.wait("pause")
+        wait_release("pause")
+        awoke.set()
+        print("awoke")
