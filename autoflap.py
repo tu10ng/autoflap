@@ -190,11 +190,6 @@ def press_key(key: str):
     time.sleep(interval / 2)
 
 
-def wait_release(key):
-    while keyboard.is_pressed(key):
-        pass
-
-
 def print_cat():
     print(
         r"""
@@ -218,9 +213,26 @@ def print_cat():
     )
 
 
+def print_cat2():
+    print(
+        r"""
+                  .
+           __..--''``\--....___   _..,_
+       _.-'    .-/";  `        ``<._  ``-+'~=.
+   _.-' _..--.'_    \                    `(^) )
+  ((..-'    (< _     ;_..__               ; `'
+             `-._,_)'      ``--...____..-'
+                                      fxlee
+
+"""
+    )
+
+
 if __name__ == "__main__":
     mp.set_start_method("spawn")  # default on windows, but not linux
     os.system("")  # for ascii control sequence
+    k = ctypes.windll.kernel32
+    k.SetConsoleMode(k.GetStdHandle(-11), 7)
     mkq = mp.Queue()
     awoke = mp.Event()  # if set->run; clear->sleep
     awoke.set()
@@ -235,8 +247,7 @@ if __name__ == "__main__":
 
     while True:
         # `Pause' to sleep the program
-        keyboard.wait("pause")
-        wait_release("pause")
+        keyboard.wait("pause", True, True)
         awoke.clear()
 
         # reset flap
@@ -245,9 +256,11 @@ if __name__ == "__main__":
             press_key("r")
             press_key("r")
 
-        print("sleeping")
+        # clear screen
+        print("\033[H\033[2Jsleeping\033[0m")
+        print_cat2()
 
-        keyboard.wait("pause")
-        wait_release("pause")
+        keyboard.wait("pause", True, True)
         awoke.set()
-        print("awoke")
+        print("\033[H\033[2Jawoke\033[0m")
+        print_cat()
