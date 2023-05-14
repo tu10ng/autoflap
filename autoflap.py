@@ -65,7 +65,7 @@ def send_flaps(mkq: mp.Queue, awoke):
         awoke.wait()
         # if not in plane, we will loop in here
         # time sleep here must not be too small, or mkq will not be empty
-        time.sleep(0.002)
+        time.sleep(0.05)
         flaps = read_8111()
         if flaps == None:
             print("还没上天")
@@ -228,6 +228,31 @@ def print_cat2():
     )
 
 
+count = 0
+
+
+def pause_program():
+    global count
+    if count == 0:
+        count = 1
+        awoke.clear()
+
+        # reset flap
+        if in_wt():
+            press_key("r")
+            press_key("r")
+            press_key("r")
+
+        # clear screen
+        print("\033[H\033[2Jsleeping\033[0m")
+        print_cat2()
+    else:
+        count = 0
+        print("\033[H\033[2Jawoke\033[0m")
+        print_cat()
+        awoke.set()
+
+
 if __name__ == "__main__":
     mp.set_start_method("spawn")  # default on windows, but not linux
     os.system("")  # for ascii control sequence
@@ -245,22 +270,12 @@ if __name__ == "__main__":
     p1.start()
     p2.start()
 
+    keyboard.add_hotkey(
+        "pause",
+        lambda: pause_program(),
+        suppress=True,
+        # trigger_on_release=True
+    )
+
     while True:
-        # `Pause' to sleep the program
-        keyboard.wait("pause", True, True)
-        awoke.clear()
-
-        # reset flap
-        if in_wt():
-            press_key("r")
-            press_key("r")
-            press_key("r")
-
-        # clear screen
-        print("\033[H\033[2Jsleeping\033[0m")
-        print_cat2()
-
-        keyboard.wait("pause", True, True)
-        awoke.set()
-        print("\033[H\033[2Jawoke\033[0m")
-        print_cat()
+        time.sleep(0.001)
