@@ -51,8 +51,7 @@ def get_flaps():
     return None if not in plane or wt not running"""
     try:
         state = session.get("http://127.0.0.1:8111/state").json()
-    except Exception as e:
-        print("\rwar thunder isn't running: ", e, end="")
+    except Exception as _:
         return None
 
     if state["valid"] == False:
@@ -100,12 +99,7 @@ def in_wt():
     """
     front_window = getWindow()
     # print(front_window)
-    if re.search("War Thunder - ", front_window):
-        # print("in battle")
-        return True
-    else:
-        # print("not in battle")
-        return False
+    return re.search("War Thunder - ", front_window)
 
 
 class Press(object):
@@ -149,7 +143,26 @@ def wait_release(key):
         pass
 
 
-if __name__ == "__main__":
+def print_cat_sleep():
+    print("\033[H\033[2J\033[0m")
+    print(
+        r"""
+                  .
+           __..--''``\--....___   _..,_
+       _.-'    .-/";  `        ``<._  ``-+'~=.
+   _.-' _..--.'_    \                    `(^) )
+  ((..-'    (< _     ;_..__               ; `'
+             `-._,_)'      ``--...____..-'
+                                      fxlee
+
+"""
+    )
+    print("\033[0;36msleeping\033[0m")
+
+
+
+def print_cat_awoke():
+    print("\033[H\033[2J\033[0m")
     print(
         r"""
  
@@ -168,9 +181,14 @@ if __name__ == "__main__":
    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 
-"""
-    )
+""")
+    print("\033[0;32mawoke\033[0m")
+
+
+if __name__ == "__main__":
+    print_cat_awoke()
     session = requests.Session()
+
     while True:
         # `Pause' to sleep the program
         if keyboard.is_pressed("pause"):
@@ -183,33 +201,33 @@ if __name__ == "__main__":
                 with Press("r"):
                     pass
 
-            print("sleeping")
+            print_cat_sleep()
 
             while True:
                 time.sleep(0.01)
                 if keyboard.is_pressed("pause"):
                     wait_release("pause")
-                    print("awoke, ", end="")
                     break
 
-            print("working")
+            print_cat_awoke()
 
         # ensure read config_file on startup
         try:
             if os.path.getmtime(config_file) > config_file_mtime:
                 update_config()
+                print(f"\033[0;32mnew configuration: {target_value}\033[0m")
                 config_file_mtime = os.path.getmtime(config_file)
         except Exception as e:
-            print("Error: no configuration file detected, default to 15: ", e)
+            print(f"\033[0;31mError: cant read configuration: {e}\033[0m")
 
         # if not in battle, we will loop in here
         flaps = get_flaps()
         while flaps == None:
-            print("还没上天")
+            print("\r\033[0;36m还没上天     \033[0m", end="")
             time.sleep(5)
             flaps = get_flaps()
 
-        print("上天!: ", flaps)
+        print(f"\r\033[0;33m上天!: {flaps}     \033[0m", end="")
 
         # dont press keys when focus windows isnt wt
         if in_wt():
