@@ -102,40 +102,31 @@ def in_wt():
     return re.search("War Thunder - ", front_window)
 
 
-class Press(object):
+def press(key: str):
     """
     we must `press', and wait for a `time_interval', then `release',
     to make wt recognize our key input.
     and we cant use `press_and_release'
-    """
 
-    # 0.003 is min but unstable, flap go beyond
-    # 0.005 is very good after test
+    0.003 is min but unstable, flap go beyond
+    0.005 is very good after test
+    0.01 is also good
+    """
     time_interval = 0.005
 
-    def __init__(self, key):
-        self.key = key
+    keyboard.press(key)
 
-    def __enter__(self):
-        keyboard.press(self.key)
-
-    def __exit__(self, *args):
-        time.sleep(self.time_interval)
-        self.release_fr()
-
-    def release_fr(self):
-        keyboard.release("f")
-        keyboard.release("r")
+    time.sleep(time_interval)
+    keyboard.release("f")
+    keyboard.release("r")
 
 
 def control_flaps(flaps):
     # TODO: is equal effect flaps stability
     if flaps >= target_value:
-        with Press("r"):
-            pass
+        press("r")
     else:
-        with Press("f"):
-            pass
+        press("f")
 
 
 def wait_release(key):
@@ -160,7 +151,6 @@ def print_cat_sleep():
     print("\033[0;36msleeping\033[0m")
 
 
-
 def print_cat_awoke():
     print("\033[H\033[2J\033[0m")
     print(
@@ -181,11 +171,13 @@ def print_cat_awoke():
    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 
-""")
+"""
+    )
     print("\033[0;32mawoke\033[0m")
 
 
 if __name__ == "__main__":
+    os.system("")               # for ansi control sequence to work
     print_cat_awoke()
     session = requests.Session()
 
@@ -193,13 +185,9 @@ if __name__ == "__main__":
         # `Pause' to sleep the program
         if keyboard.is_pressed("pause"):
             wait_release("pause")
-            if in_wt():
-                with Press("r"):  # release flap immediately before release `pause'
-                    pass
-                with Press("r"):
-                    pass
-                with Press("r"):
-                    pass
+            press("r")
+            press("r")
+            press("r")
 
             print_cat_sleep()
 
