@@ -58,6 +58,11 @@ def get_flaps():
     if state["valid"] == False:
         return None
 
+    # we use this to detect in garage instead of in battle
+    # we cant get battle state from 8111/state, only from 8111
+    if state["thrust 1, kgs"] == 0:
+        return None
+
     flaps = state["flaps, %"]
     return flaps
 
@@ -110,6 +115,8 @@ class Press(object):
     and we cant use `press_and_release'
     """
 
+    # 0.003 is min but unstable, flap go beyond
+    # 0.005 is very good after test
     time_interval = 0.005
 
     def __init__(self, key):
@@ -119,8 +126,6 @@ class Press(object):
         keyboard.press(self.key)
 
     def __exit__(self, *args):
-        # 0.003 is min but unstable, flap go beyond
-        # 0.005 is very good after test
         time.sleep(self.time_interval)
         self.release_fr()
 
@@ -197,8 +202,7 @@ if __name__ == "__main__":
         except Exception as e:
             print("Error: no configuration file detected, default to 15: ", e)
 
-        # if not in plane, we will loop in here
-        # TODO: not in battle shouldnt go outside loop
+        # if not in battle, we will loop in here
         flaps = get_flaps()
         while flaps == None:
             print("还没上天")
@@ -207,6 +211,6 @@ if __name__ == "__main__":
 
         print("上天!: ", flaps)
 
-        # if in plane, dont press keys when focus windows isnt wt
+        # dont press keys when focus windows isnt wt
         if in_wt():
             control_flaps(flaps)
