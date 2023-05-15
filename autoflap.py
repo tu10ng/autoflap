@@ -7,23 +7,10 @@ import csv
 import ctypes
 
 # the value user wants. should be customizable outside of src.
-threshold = 15
-# the threshold can change +-1
-thres_range_sup = 1
-thres_range_inf = 1
-thres_max = threshold + thres_range_sup
-thres_min = threshold - thres_range_inf
-
-time_interval = 0.1
+target_value = 15
 
 config_file = "./.config.csv"
 config_file_mtime = 0
-
-
-def recalc_thres_range():
-    # its bit tedious to use class to just hold things we could type in two words
-    globals()["thres_max"] = threshold + thres_range_sup
-    globals()["thres_min"] = threshold - thres_range_inf
 
 
 # state的返回值如下
@@ -65,6 +52,7 @@ def get_flaps():
     try:
         state = session.get("http://127.0.0.1:8111/state").json()
     except Exception as e:
+        print("\rwar thunder isn't running: ", e, end="")
         return None
 
     if state["valid"] == False:
@@ -81,8 +69,6 @@ def update_config():
         reader = csv.reader(f, delimiter=" ")
         for k, v in reader:
             globals()[k] = float(v)  # globals()['threshold']
-
-    recalc_thres_range()
 
 
 # ret value:
@@ -124,6 +110,8 @@ class Press(object):
     and we cant use `press_and_release'
     """
 
+    time_interval = 0.005
+
     def __init__(self, key):
         self.key = key
 
@@ -131,9 +119,10 @@ class Press(object):
         keyboard.press(self.key)
 
     def __exit__(self, *args):
-        time.sleep(time_interval / 2)
+        # 0.003 is min but unstable, flap go beyond
+        # 0.005 is very good after test
+        time.sleep(self.time_interval)
         self.release_fr()
-        time.sleep(time_interval / 2)
 
     def release_fr(self):
         keyboard.release("f")
@@ -141,10 +130,11 @@ class Press(object):
 
 
 def control_flaps(flaps):
-    if flaps >= thres_max:
+    # TODO: is equal effect flaps stability
+    if flaps >= target_value:
         with Press("r"):
             pass
-    elif flaps <= thres_min:
+    else:
         with Press("f"):
             pass
 
@@ -179,28 +169,36 @@ if __name__ == "__main__":
     while True:
         # `Pause' to sleep the program
         if keyboard.is_pressed("pause"):
-            with Press("r"):  # release flap immediately before release `pause'
-                pass
-            with Press("r"):
-                pass
-            with Press("r"):
-                pass
-                
             wait_release("pause")
+            if in_wt():
+                with Press("r"):  # release flap immediately before release `pause'
+                    pass
+                with Press("r"):
+                    pass
+                with Press("r"):
+                    pass
+
             print("sleeping")
 
-            keyboard.wait("pause")
-            wait_release("pause")
-            print("awake")
+            while True:
+                time.sleep(0.01)
+                if keyboard.is_pressed("pause"):
+                    wait_release("pause")
+                    print("awoke, ", end="")
+                    break
+
+            print("working")
 
         # ensure read config_file on startup
         try:
             if os.path.getmtime(config_file) > config_file_mtime:
                 update_config()
+                config_file_mtime = os.path.getmtime(config_file)
         except Exception as e:
-            print("Error: no configuration file detected, default to 15.")
+            print("Error: no configuration file detected, default to 15: ", e)
 
         # if not in plane, we will loop in here
+        # TODO: not in battle shouldnt go outside loop
         flaps = get_flaps()
         while flaps == None:
             print("还没上天")
