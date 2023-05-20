@@ -151,7 +151,7 @@ def print_cat_sleep():
     print("\033[0;36msleeping\033[0m")
 
 
-def print_cat_awoke():
+def print_cat_awake():
     print("\033[H\033[2J\033[0m")
     print(
         r"""
@@ -173,12 +173,12 @@ def print_cat_awoke():
 
 """
     )
-    print("\033[0;32mawoke\033[0m")
+    print("\033[0;32mawake\033[0m")
 
 
 if __name__ == "__main__":
-    os.system("")               # for ansi control sequence to work
-    print_cat_awoke()
+    os.system("")  # for ansi control sequence to work
+    print_cat_awake()
     session = requests.Session()
 
     while True:
@@ -186,7 +186,9 @@ if __name__ == "__main__":
         if keyboard.is_pressed("pause"):
             wait_release("pause")
             press("r")
+            time.sleep(0.005)
             press("r")
+            time.sleep(0.005)
             press("r")
 
             print_cat_sleep()
@@ -197,7 +199,7 @@ if __name__ == "__main__":
                     wait_release("pause")
                     break
 
-            print_cat_awoke()
+            print_cat_awake()
 
         # ensure read config_file on startup
         try:

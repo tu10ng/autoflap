@@ -1,0 +1,26 @@
+一、如何下载 autoflap 插件？
+	1. 进入 https://github.com/tu10ng/autoflap/releases
+	2. 下载最新版的 autoflap.rar
+	3. 解压 autoflap.rar 
+	4. 解压出的 autoflap 文件夹可放在任何地方
+
+二、如何使用 autoflap 插件
+	1. 在 autoflap 文件夹的 .config.csv 中，通过 target_value 后的数字，来控制襟翼开启的百分比
+		tips：.config.csv 可以用记事本打开
+		tips：襟翼开启百分比可以用8111插件检测
+	2. 双击 autoflap.exe 运行插件，最小化窗口
+		tips：窗口中有一只猫坐在带刺的栅栏上
+	3. 启动战雷游戏
+	4. 在 按键设置/空战/装置控制 中，将 F 键设置为放下襟翼，将 R 键设置为收起襟翼
+		tips：放下襟翼和收起襟翼可以有其他键位，但必须有 F 和 R，否则插件无法运行
+	5. 在游戏中驾驶飞机时， autoflap 插件将自动控制襟翼维持在设定值附近
+		tips：左下角可以观察到襟翼档位疯狂切换
+		tips：可以用8111插件实时检测襟翼百分比，来反应 autoflap 插件是否正常运行
+		tips：控制的稳定程度与cpu好坏有关，cpu较差可能会导致襟翼百分比波动较大
+	6. Pause键可以暂停插件运作，再按一次可以让插件继续运作
+	7. 在不驾驶飞机时，插件将自动暂停运行；下次驾驶飞机时，插件将自动运行
+	8. 关闭 autoflap.exe 的窗口以停止插件运行
+
+三、如果想对插件提出改进建议
+	进入 https://github.com/tu10ng/autoflap/issues 进行留言
+	灌注 tu10ng 喵，灌注 tu10ng 谢谢喵！
