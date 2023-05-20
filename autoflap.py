@@ -185,11 +185,9 @@ if __name__ == "__main__":
         # `Pause' to sleep the program
         if keyboard.is_pressed("pause"):
             wait_release("pause")
-            press("r")
-            time.sleep(0.005)
-            press("r")
-            time.sleep(0.005)
-            press("r")
+            for _ in range(5):
+                time.sleep(0.01)
+                press("r")
 
             print_cat_sleep()
 
